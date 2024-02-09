@@ -60,14 +60,33 @@ function endGroup(): void {
 	}
 }
 
+function getShellCommands(name: string): string[] {
+    const lines = [];
+    let current = '';
+
+    for (const line of getMultilineInput(name)) {
+        current += line;
+
+        if (line.endsWith("\\")) {
+            current = current.slice(0, -1);
+        }
+        else {
+            lines.push(current);
+            current = '';
+        }
+    }
+
+    return lines;
+}
+
 async function main() {
 	try {
 		authenticationSetup();
 		await installWrangler();
-		await execCommands(getMultilineInput("preCommands"), "pre");
+		await execCommands(getShellCommands("preCommands"), "pre");
 		await uploadSecrets();
 		await wranglerCommands();
-		await execCommands(getMultilineInput("postCommands"), "post");
+		await execCommands(getShellCommands("postCommands"), "post");
 		info("🏁 Wrangler Action completed", true);
 	} catch (err: unknown) {
 		err instanceof Error && error(err.message);
