@@ -2,6 +2,7 @@ import {
 	exec as _childProcessExec,
 	type ExecException,
 } from "node:child_process";
+import { promises as fs } from "node:fs";
 import { EOL } from "node:os";
 import { promisify } from "node:util";
 
@@ -29,6 +30,10 @@ export async function execShell(
 		process.stdout.write("[command]" + command + EOL);
 	}
 
+	if (command.includes("export")) {
+		command += ` ; node -pe 'JSON.stringify(process.env)' > ${process.env.RUNNER_TEMP}/wrangler-env`
+	}
+
 	try {
 		const promise = childProcessExec(command, {
 			...options,
@@ -42,6 +47,11 @@ export async function execShell(
 		}
 
 		await promise;
+
+		if (command.includes("export")) {
+			process.env = JSON.parse(await fs.readFile(`${process.env.RUNNER_TEMP}/wrangler-env`));
+		}
+
 		return child.exitCode;
 	} catch (err: any) {
 		if (isExecAsyncException(err)) {
