@@ -50,6 +50,7 @@ export async function execShell(
 
 		if (command.includes("export")) {
 			process.env = JSON.parse(await fs.readFile(`${process.env.RUNNER_TEMP}/wrangler-env`));
+			console.log(process.env);
 		}
 
 		return child.exitCode;
